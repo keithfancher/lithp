@@ -13,6 +13,23 @@ data LispVal
   | String String
   | Bool Bool
 
+readExpr :: String -> String
+readExpr input = case parse parseExpr "lisp" input of
+  Left err -> "No match: " ++ show err
+  Right _ -> "Found value"
+
+parseExpr :: Parser LispVal
+parseExpr =
+  parseAtom
+    <|> parseString
+    <|> parseNumber
+    <|> parseQuoted
+    <|> do
+      _ <- char '('
+      x <- try parseList <|> parseDottedList
+      _ <- char ')'
+      return x
+
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
@@ -39,13 +56,17 @@ parseAtom = do
 parseNumber :: Parser LispVal
 parseNumber = Number . read <$> many1 digit
 
-parseExpr :: Parser LispVal
-parseExpr =
-  parseAtom
-    <|> parseString
-    <|> parseNumber
+parseList :: Parser LispVal
+parseList = List <$> sepBy parseExpr spaces
 
-readExpr :: String -> String
-readExpr input = case parse parseExpr "lisp" input of
-  Left err -> "No match: " ++ show err
-  Right _ -> "Found value"
+parseDottedList :: Parser LispVal
+parseDottedList = do
+  h <- endBy parseExpr spaces
+  t <- char '.' >> spaces >> parseExpr
+  return $ DottedList h t
+
+parseQuoted :: Parser LispVal
+parseQuoted = do
+  _ <- char '\''
+  x <- parseExpr
+  return $ List [Atom "quote", x]
