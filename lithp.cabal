@@ -33,6 +33,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , parsec
   default-language: Haskell2010
 
 executable lithp
@@ -45,6 +46,7 @@ executable lithp
   build-depends:
       base >=4.7 && <5
     , lithp
+    , parsec
   default-language: Haskell2010
 
 test-suite lithp-test
@@ -58,4 +60,5 @@ test-suite lithp-test
   build-depends:
       base >=4.7 && <5
     , lithp
+    , parsec
   default-language: Haskell2010

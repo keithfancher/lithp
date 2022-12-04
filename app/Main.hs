@@ -1,6 +1,9 @@
 module Main (main) where
 
-import Lib
+import Lib (readExpr)
+import System.Environment (getArgs)
 
 main :: IO ()
-main = someFunc
+main = do
+  (expr : _) <- getArgs
+  putStrLn (readExpr expr)
