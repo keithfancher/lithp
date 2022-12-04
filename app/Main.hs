@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Lib (readExpr)
+import Parse (readExpr)
 import System.Environment (getArgs)
 
 main :: IO ()
