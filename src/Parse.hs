@@ -1,37 +1,17 @@
 module Parse
-  ( LispVal (..),
-    readExpr,
+  ( readExpr,
   )
 where
 
+import Control.Monad.Except (throwError)
+import Error (LispError (..), ThrowsError)
 import Text.ParserCombinators.Parsec hiding (spaces)
+import Val (LispVal (..))
 
-data LispVal
-  = Atom String
-  | List [LispVal]
-  | DottedList [LispVal] LispVal
-  | Number Integer
-  | String String
-  | Bool Bool
-
-instance Show LispVal where show = showVal
-
-showVal :: LispVal -> String
-showVal (String contents) = "\"" ++ contents ++ "\""
-showVal (Atom name) = name
-showVal (Number contents) = show contents
-showVal (Bool True) = "#t"
-showVal (Bool False) = "#f"
-showVal (List contents) = "(" ++ unwordsList contents ++ ")"
-showVal (DottedList h t) = "(" ++ unwordsList h ++ " . " ++ showVal t ++ ")"
-
-unwordsList :: [LispVal] -> String
-unwordsList = unwords . map showVal
-
-readExpr :: String -> LispVal
+readExpr :: String -> ThrowsError LispVal
 readExpr input = case parse parseExpr "lisp" input of
-  Left err -> String $ "No match: " ++ show err
-  Right val -> val
+  Left err -> throwError $ Parser err
+  Right val -> return val
 
 parseExpr :: Parser LispVal
 parseExpr =
