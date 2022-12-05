@@ -1,0 +1,10 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "lithp:lib"
+
+    - path: "./app"
+      component: "lithp:exe:lithp"
+
+    - path: "./test"
+      component: "lithp:test:lithp-test"
