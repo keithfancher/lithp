@@ -1,5 +1,6 @@
 module Parse
-  ( readExpr,
+  ( LispVal (..),
+    readExpr,
   )
 where
 
@@ -27,10 +28,10 @@ showVal (DottedList h t) = "(" ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal
 
-readExpr :: String -> String
+readExpr :: String -> LispVal
 readExpr input = case parse parseExpr "lisp" input of
-  Left err -> "No match: " ++ show err
-  Right val -> "Found " ++ show val
+  Left err -> String $ "No match: " ++ show err
+  Right val -> val
 
 parseExpr :: Parser LispVal
 parseExpr =
