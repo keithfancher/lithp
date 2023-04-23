@@ -2,6 +2,7 @@ module Eval (eval) where
 
 import Control.Monad.Except (throwError)
 import Error (LispError (..), ThrowsError)
+import List (car, cdr, cons)
 import Val (LispVal (..))
 
 eval :: LispVal -> ThrowsError LispVal
@@ -46,6 +47,10 @@ primitives =
     ("string>?", strBoolBinop (>)),
     ("string<=?", strBoolBinop (<=)),
     ("string>=?", strBoolBinop (>=))
+    ("string>=?", strBoolBinop (>=)),
+    ("car", car),
+    ("cdr", cdr),
+    ("cons", cons),
   ]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
