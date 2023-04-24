@@ -29,6 +29,7 @@ library
       Eval
       List
       Parse
+      Repl
       Val
   other-modules:
       Paths_lithp

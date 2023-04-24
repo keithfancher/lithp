@@ -1,12 +1,12 @@
 module Main (main) where
 
-import Error (extractValue, trapError)
-import Eval (eval)
-import Parse (readExpr)
+import Repl (evalAndPrint, runRepl)
 import System.Environment (getArgs)
 
 main :: IO ()
 main = do
   args <- getArgs
-  let evaled = fmap show $ readExpr (head args) >>= eval -- TODO: partial!
-  putStrLn $ extractValue $ trapError evaled
+  case length args of
+    0 -> runRepl
+    1 -> evalAndPrint $ head args -- TODO: partial!
+    _ -> putStrLn "Program takes only 0 or 1 argument"
