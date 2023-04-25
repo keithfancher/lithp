@@ -6,6 +6,7 @@ module Error
   )
 where
 
+import Control.Monad.Error.Class (MonadError)
 import Control.Monad.Except (catchError)
 import Text.Parsec (ParseError)
 import Val (LispVal, unwordsList)
@@ -23,6 +24,7 @@ instance Show LispError where show = showError
 
 type ThrowsError = Either LispError
 
+trapError :: (MonadError e m, Show e) => m String -> m String
 trapError action = catchError action (return . show)
 
 extractValue :: ThrowsError a -> a
