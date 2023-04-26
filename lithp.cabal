@@ -30,6 +30,7 @@ library
       List
       Parse
       Repl
+      State
       Val
   other-modules:
       Paths_lithp
