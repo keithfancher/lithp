@@ -1,8 +1,11 @@
 module State
   ( Env,
-    nullEnv,
+    IOThrowsError,
     defineVar,
     getVar,
+    liftThrows,
+    runIOThrows,
+    nullEnv,
     setVar,
   )
 where

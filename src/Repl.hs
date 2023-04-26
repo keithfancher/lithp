@@ -1,19 +1,26 @@
 module Repl
   ( evalAndPrint,
+    runOne,
     runRepl,
   )
 where
 
-import Error (extractValue, trapError)
 import Eval (eval)
 import Parse (readExpr)
+import State (Env, liftThrows, nullEnv, runIOThrows)
 import System.IO
 
-runRepl :: IO ()
-runRepl = until_ (== "quit") (readPrompt "Lithp>>> ") evalAndPrint
+-- Evaluate a single expression and print the result.
+runOne :: String -> IO ()
+runOne expr = nullEnv >>= flip evalAndPrint expr
 
-evalAndPrint :: String -> IO ()
-evalAndPrint expr = evalString expr >>= putStrLn
+-- TODO: Frankly, I don't understand why this works, even after reading the
+-- explanation. Which means I'm missing something important.
+runRepl :: IO ()
+runRepl = nullEnv >>= until_ (== "quit") (readPrompt "Lithp>>> ") . evalAndPrint
+
+evalAndPrint :: Env -> String -> IO ()
+evalAndPrint env expr = evalString env expr >>= putStrLn
 
 readPrompt :: String -> IO String
 readPrompt prompt = flushStr prompt >> getLine
@@ -23,8 +30,8 @@ readPrompt prompt = flushStr prompt >> getLine
 flushStr :: String -> IO ()
 flushStr str = putStr str >> hFlush stdout
 
-evalString :: String -> IO String
-evalString expr = return $ extractValue $ trapError (fmap show $ readExpr expr >>= eval)
+evalString :: Env -> String -> IO String
+evalString env expr = runIOThrows $ fmap show $ liftThrows (readExpr expr) >>= eval env
 
 until_ :: Monad m => (a -> Bool) -> m a -> (a -> m ()) -> m ()
 until_ predicate prompt action = do

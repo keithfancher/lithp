@@ -3,20 +3,26 @@ module Eval (eval) where
 import Control.Monad.Except (catchError, throwError)
 import Error (LispError (..), ThrowsError)
 import List (car, cdr, cons)
+import State (Env, IOThrowsError, defineVar, getVar, liftThrows, setVar)
 import Val (LispVal (..))
 
-eval :: LispVal -> ThrowsError LispVal
-eval val@(String _) = return val
-eval val@(Number _) = return val
-eval val@(Bool _) = return val
-eval (List [Atom "quote", val]) = return val
-eval (List [Atom "if", predicate, conseq, alt]) = do
-  result <- eval predicate
+eval :: Env -> LispVal -> IOThrowsError LispVal
+eval _ val@(String _) = return val
+eval _ val@(Number _) = return val
+eval _ val@(Bool _) = return val
+eval env (Atom varName) = getVar env varName
+eval _ (List [Atom "quote", val]) = return val
+eval env (List [Atom "if", predicate, conseq, alt]) = do
+  result <- eval env predicate
   case result of
-    Bool False -> eval alt
-    _otherwise -> eval conseq
-eval (List (Atom func : args)) = mapM eval args >>= apply func
-eval badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
+    Bool False -> eval env alt
+    _otherwise -> eval env conseq
+eval env (List [Atom "set!", Atom var, form]) =
+  eval env form >>= setVar env var
+eval env (List [Atom "define", Atom var, form]) =
+  eval env form >>= defineVar env var
+eval env (List (Atom func : args)) = mapM (eval env) args >>= liftThrows . apply func
+eval _ badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
 apply :: String -> [LispVal] -> ThrowsError LispVal
 apply func args =
