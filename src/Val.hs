@@ -16,7 +16,7 @@ where
 
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.Except (ExceptT, catchError)
-import Data.IORef
+import Data.IORef (IORef, newIORef)
 import Text.Parsec (ParseError)
 
 data LispVal

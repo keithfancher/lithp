@@ -9,7 +9,7 @@ import Eval (eval)
 import Parse (readExpr)
 import Primitives (primitiveBindings)
 import State (liftThrows, runIOThrows)
-import System.IO
+import System.IO (hFlush, stdout)
 import Val (Env)
 
 -- Evaluate a single expression and print the result.

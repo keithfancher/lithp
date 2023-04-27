@@ -8,8 +8,8 @@ module State
   )
 where
 
-import Control.Monad.Except (ExceptT, liftIO, runExceptT, throwError)
-import Data.IORef
+import Control.Monad.Except (liftIO, runExceptT, throwError)
+import Data.IORef (newIORef, readIORef, writeIORef)
 import Data.Maybe (isJust)
 import Val (Env, IOThrowsError, LispError (..), LispVal, ThrowsError, extractValue, trapError)
 
