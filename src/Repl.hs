@@ -7,8 +7,9 @@ where
 
 import Eval (eval)
 import Parse (readExpr)
-import State (Env, liftThrows, nullEnv, runIOThrows)
+import State (liftThrows, runIOThrows)
 import System.IO
+import Val (Env, nullEnv)
 
 -- Evaluate a single expression and print the result.
 runOne :: String -> IO ()

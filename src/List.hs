@@ -6,8 +6,7 @@ module List
 where
 
 import Control.Monad.Except (throwError)
-import Error (LispError (..), ThrowsError)
-import Val (LispVal (..))
+import Val (LispError (..), LispVal (..), ThrowsError)
 
 car :: [LispVal] -> ThrowsError LispVal
 car [List (x : _)] = return x

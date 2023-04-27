@@ -1,11 +1,9 @@
 module State
-  ( Env,
-    IOThrowsError,
+  ( IOThrowsError,
     defineVar,
     getVar,
     liftThrows,
     runIOThrows,
-    nullEnv,
     setVar,
   )
 where
@@ -13,13 +11,7 @@ where
 import Control.Monad.Except (ExceptT, liftIO, runExceptT, throwError)
 import Data.IORef
 import Data.Maybe (isJust)
-import Error (LispError (..), ThrowsError, extractValue, trapError)
-import Val (LispVal)
-
-type Env = IORef [(String, IORef LispVal)]
-
-nullEnv :: IO Env
-nullEnv = newIORef []
+import Val (Env, LispError (..), LispVal, ThrowsError, extractValue, trapError)
 
 type IOThrowsError = ExceptT LispError IO
 

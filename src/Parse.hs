@@ -4,9 +4,8 @@ module Parse
 where
 
 import Control.Monad.Except (throwError)
-import Error (LispError (..), ThrowsError)
 import Text.ParserCombinators.Parsec hiding (spaces)
-import Val (LispVal (..))
+import Val (LispError (..), LispVal (..), ThrowsError)
 
 readExpr :: String -> ThrowsError LispVal
 readExpr input = case parse parseExpr "lisp" input of

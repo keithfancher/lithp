@@ -1,10 +1,9 @@
 module Eval (eval) where
 
 import Control.Monad.Except (catchError, throwError)
-import Error (LispError (..), ThrowsError)
 import List (car, cdr, cons)
-import State (Env, IOThrowsError, defineVar, getVar, liftThrows, setVar)
-import Val (LispVal (..))
+import State (IOThrowsError, defineVar, getVar, liftThrows, setVar)
+import Val (Env, LispError (..), LispVal (..), ThrowsError)
 
 eval :: Env -> LispVal -> IOThrowsError LispVal
 eval _ val@(String _) = return val
