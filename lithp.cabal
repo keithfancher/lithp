@@ -28,6 +28,7 @@ library
       Eval
       List
       Parse
+      Primitives
       Repl
       State
       Val

@@ -5,8 +5,9 @@ module Repl
   )
 where
 
-import Eval (eval, primitiveBindings)
+import Eval (eval)
 import Parse (readExpr)
+import Primitives (primitiveBindings)
 import State (liftThrows, runIOThrows)
 import System.IO
 import Val (Env)
