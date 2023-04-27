@@ -1,9 +1,13 @@
 module Val
   ( Env,
+    IOThrowsError,
     LispVal (..),
     LispError (..),
     ThrowsError,
     extractValue,
+    makeFunc,
+    makeNormalFunc,
+    makeVarArgs,
     nullEnv,
     trapError,
     unwordsList,
@@ -11,7 +15,7 @@ module Val
 where
 
 import Control.Monad.Error.Class (MonadError)
-import Control.Monad.Except (catchError)
+import Control.Monad.Except (ExceptT, catchError)
 import Data.IORef
 import Text.Parsec (ParseError)
 
@@ -22,6 +26,14 @@ data LispVal
   | Number Integer
   | String String
   | Bool Bool
+  | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
+  | -- TODO: these all warn, this seems like a no-no?
+    Func
+      { params :: [String],
+        vararg :: Maybe String,
+        body :: [LispVal],
+        closure :: Env
+      }
 
 instance Show LispVal where show = showVal
 
@@ -33,9 +45,29 @@ showVal (Bool True) = "#t"
 showVal (Bool False) = "#f"
 showVal (List contents) = "(" ++ unwordsList contents ++ ")"
 showVal (DottedList h t) = "(" ++ unwordsList h ++ " . " ++ showVal t ++ ")"
+showVal (PrimitiveFunc _) = "<primitive>"
+showVal (Func {params = args, vararg = varargs, body = _, closure = _}) =
+  "(lambda ("
+    ++ unwords (map show args)
+    ++ ( case varargs of
+           Nothing -> ""
+           Just arg -> " . " ++ arg
+       )
+    ++ ") ...)"
 
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal
+
+type IOThrowsError = ExceptT LispError IO
+
+makeFunc :: Maybe String -> Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
+makeFunc varargs env params body = return $ Func (map showVal params) varargs body env
+
+makeNormalFunc :: Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
+makeNormalFunc = makeFunc Nothing
+
+makeVarArgs :: LispVal -> Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
+makeVarArgs = makeFunc . Just . showVal
 
 type Env = IORef [(String, IORef LispVal)]
 

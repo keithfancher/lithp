@@ -1,5 +1,5 @@
 module State
-  ( IOThrowsError,
+  ( bindVars,
     defineVar,
     getVar,
     liftThrows,
@@ -11,9 +11,7 @@ where
 import Control.Monad.Except (ExceptT, liftIO, runExceptT, throwError)
 import Data.IORef
 import Data.Maybe (isJust)
-import Val (Env, LispError (..), LispVal, ThrowsError, extractValue, trapError)
-
-type IOThrowsError = ExceptT LispError IO
+import Val (Env, IOThrowsError, LispError (..), LispVal, ThrowsError, extractValue, trapError)
 
 liftThrows :: ThrowsError a -> IOThrowsError a
 liftThrows (Left err) = throwError err

@@ -5,20 +5,20 @@ module Repl
   )
 where
 
-import Eval (eval)
+import Eval (eval, primitiveBindings)
 import Parse (readExpr)
 import State (liftThrows, runIOThrows)
 import System.IO
-import Val (Env, nullEnv)
+import Val (Env)
 
 -- Evaluate a single expression and print the result.
 runOne :: String -> IO ()
-runOne expr = nullEnv >>= flip evalAndPrint expr
+runOne expr = primitiveBindings >>= flip evalAndPrint expr
 
 -- TODO: Frankly, I don't understand why this works, even after reading the
 -- explanation. Which means I'm missing something important.
 runRepl :: IO ()
-runRepl = nullEnv >>= until_ (== "quit") (readPrompt "Lithp>>> ") . evalAndPrint
+runRepl = primitiveBindings >>= until_ (== "quit") (readPrompt "Lithp>>> ") . evalAndPrint
 
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn
