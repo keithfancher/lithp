@@ -54,14 +54,13 @@ strBoolBinop = boolBinop unpackStr
 boolBoolBinop :: (Bool -> Bool -> Bool) -> [LispVal] -> ThrowsError LispVal
 boolBoolBinop = boolBinop unpackBool
 
+-- Generic helper to run binary operations on various input types.
 boolBinop :: (LispVal -> ThrowsError a) -> (a -> a -> Bool) -> [LispVal] -> ThrowsError LispVal
-boolBinop unpacker op args =
-  if length args /= 2
-    then throwError $ NumArgs 2 args
-    else do
-      left <- unpacker $ head args -- TODO: partial
-      right <- unpacker $ args !! 1
-      return $ Bool $ left `op` right
+boolBinop unpacker op [arg1, arg2] = do
+  left <- unpacker arg1
+  right <- unpacker arg2
+  return $ Bool $ left `op` right
+boolBinop _ _ notTwoArgs = throwError $ NumArgs 2 notTwoArgs
 
 -- Weak typing! The following values are essentially equivalent:
 --   3, "3", [3], "3 hey there mister"
