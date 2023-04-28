@@ -43,7 +43,9 @@ primitives =
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
 numericBinop _ [] = throwError $ NumArgs 2 []
 numericBinop _ singleVal@[_] = throwError $ NumArgs 2 singleVal
-numericBinop op params = mapM unpackNum params >>= return . Number . foldl1 op
+numericBinop op params = foldInts <$> mapM unpackNum params
+  where
+    foldInts = Number . foldl1 op -- fold ints into a `LispVal` with `op`
 
 numBoolBinop :: (Integer -> Integer -> Bool) -> [LispVal] -> ThrowsError LispVal
 numBoolBinop = boolBinop unpackNum
