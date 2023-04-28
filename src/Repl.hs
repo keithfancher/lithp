@@ -16,10 +16,10 @@ import Val (Env)
 runOne :: String -> IO ()
 runOne expr = primitiveBindings >>= flip evalAndPrint expr
 
--- TODO: Frankly, I don't understand why this works, even after reading the
--- explanation. Which means I'm missing something important.
 runRepl :: IO ()
-runRepl = primitiveBindings >>= until_ (== "quit") (readPrompt "Lithp>>> ") . evalAndPrint
+runRepl = do
+  env <- primitiveBindings
+  until_ (== "quit") (readPrompt "Lithp>>> ") (evalAndPrint env)
 
 evalAndPrint :: Env -> String -> IO ()
 evalAndPrint env expr = evalString env expr >>= putStrLn
