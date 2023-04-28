@@ -63,15 +63,21 @@ boolBinop unpacker op args =
       right <- unpacker $ args !! 1
       return $ Bool $ left `op` right
 
+-- Weak typing! The following values are essentially equivalent:
+--   3, "3", [3], "3 hey there mister"
+-- Why? Blame: https://en.wikibooks.org/wiki/Write_Yourself_a_Scheme_in_48_Hours/Evaluation,_Part_1
 unpackNum :: LispVal -> ThrowsError Integer
 unpackNum (Number n) = return n
-unpackNum (String n) =
-  let parsed = reads n
-   in if null parsed
-        then throwError $ TypeMismatch "number" $ String n
-        else return $ fst $ head parsed -- TODO: partial!
+unpackNum (String n) = weakNumFromString n
 unpackNum (List [n]) = unpackNum n
 unpackNum notNum = throwError $ TypeMismatch "number" notNum
+
+-- In this conversion, if any string *starts* with an integer, that integer
+-- will be successfully parsed out.
+weakNumFromString :: String -> ThrowsError Integer
+weakNumFromString n = case reads n of
+  [] -> throwError $ TypeMismatch "number" $ String n
+  (intVal, _) : _ -> return intVal -- `reads` returns a list of pairs, [(a, String)] -- we want the first
 
 unpackStr :: LispVal -> ThrowsError String
 unpackStr (String s) = return s
