@@ -38,7 +38,23 @@ Or run without arguments to play with the REPL:
 $ stack exec lithp
 Lithp>>> (eqv? '(6 6 6) '(6 6 6))
 #t
+Lithp>>> (eqv? 3 "3")
+#f
+Lithp>>> (equal? 3 "3")
+#t
+Lithp>>> (define (f x y) (+ x y))
+(lambda ("x" "y") ...)
+Lithp>>> (f 40 2)
+42
+Lithp>>> (define (factorial x) (if (= x 1) 1 (* x (factorial (- x 1)))))
+(lambda ("x") ...)
+Lithp>>> (factorial 4)
+24
+Lithp>>> (- (+ (factorial 4) (factorial 4)) 6)
+42
 Lithp>>> quit
 ```
 
-Don't try nothin' fancy -- it's still a work in progress.
+Check out [the available primitives](https://github.com/keithfancher/lithp/blob/master/src/Primitives.hs)
+to get a better idea of what you can do so far. But don't try nothin' fancy --
+it's still a work in progress.
