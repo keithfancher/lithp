@@ -108,3 +108,4 @@ showError (TypeMismatch expected found) =
     ++ ", found "
     ++ show found
 showError (Parser parseErr) = "Parse error at " ++ show parseErr
+showError (Default err) = "Error: " ++ err
