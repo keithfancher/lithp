@@ -2,6 +2,7 @@ module Val
   ( Env,
     IOThrowsError,
     LispVal (..),
+    LispFunc (..),
     LispError (..),
     ThrowsError,
     extractValue,
@@ -27,13 +28,20 @@ data LispVal
   | String String
   | Bool Bool
   | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
-  | -- TODO: these all warn, this seems like a no-no?
-    Func
-      { params :: [String],
-        vararg :: Maybe String,
-        body :: [LispVal],
-        closure :: Env
-      }
+  | Func LispFunc
+
+-- A user-defined function.
+data LispFunc = LispFunc
+  { -- the names of the parameters, as they're bound in the function body
+    params :: [String],
+    -- whether the function accepts a variable-length list of arguments, and if
+    -- so, the variable name it's bound to
+    vararg :: Maybe String,
+    -- the function body, as a list of expressions
+    body :: [LispVal],
+    -- the environment that the function was created in
+    closure :: Env
+  }
 
 instance Show LispVal where show = showVal
 
@@ -46,7 +54,7 @@ showVal (Bool False) = "#f"
 showVal (List contents) = "(" ++ unwordsList contents ++ ")"
 showVal (DottedList h t) = "(" ++ unwordsList h ++ " . " ++ showVal t ++ ")"
 showVal (PrimitiveFunc _) = "<primitive>"
-showVal (Func {params = args, vararg = varargs, body = _, closure = _}) =
+showVal (Func LispFunc {params = args, vararg = varargs, body = _, closure = _}) =
   "(lambda ("
     ++ unwords (map show args)
     ++ ( case varargs of
@@ -61,7 +69,7 @@ unwordsList = unwords . map showVal
 type IOThrowsError = ExceptT LispError IO
 
 makeFunc :: Maybe String -> Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
-makeFunc varargs env params body = return $ Func (map showVal params) varargs body env
+makeFunc varargs env params body = return $ Func $ LispFunc (map showVal params) varargs body env
 
 makeNormalFunc :: Env -> [LispVal] -> [LispVal] -> IOThrowsError LispVal
 makeNormalFunc = makeFunc Nothing
@@ -90,6 +98,7 @@ type ThrowsError = Either LispError
 trapError :: (MonadError e m, Show e) => m String -> m String
 trapError action = catchError action (return . show)
 
+-- TODO: partial. And why does this need to exist?
 extractValue :: ThrowsError a -> a
 extractValue (Right val) = val
 

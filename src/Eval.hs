@@ -3,7 +3,7 @@ module Eval (eval) where
 import Control.Monad.Except (liftIO, throwError)
 import Data.Maybe (isNothing)
 import State (bindVars, defineVar, getVar, liftThrows, setVar)
-import Val (Env, IOThrowsError, LispError (..), LispVal (..), makeNormalFunc, makeVarArgs)
+import Val (Env, IOThrowsError, LispError (..), LispFunc (..), LispVal (..), makeNormalFunc, makeVarArgs)
 
 eval :: Env -> LispVal -> IOThrowsError LispVal
 eval _ val@(String _) = return val
@@ -38,7 +38,7 @@ eval _ badForm = throwError $ BadSpecialForm "Unrecognized special form" badForm
 
 apply :: LispVal -> [LispVal] -> IOThrowsError LispVal
 apply (PrimitiveFunc func) args = liftThrows $ func args
-apply (Func params varargs body closure) args =
+apply (Func (LispFunc params varargs body closure)) args =
   if num params /= num args && isNothing varargs
     then throwError $ NumArgs (num params) args
     else liftIO (bindVars closure $ zip params args) >>= bindVarArgs varargs >>= evalBody
