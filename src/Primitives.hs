@@ -35,9 +35,9 @@ primitives =
     ("car", car),
     ("cdr", cdr),
     ("cons", cons),
-    ("eq?", eqvWrap),
-    ("eqv?", eqvWrap),
-    ("equal?", equal)
+    ("eq?", equalsStrictWrap),
+    ("eqv?", equalsStrictWrap),
+    ("equal?", equalsLoose)
   ]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
@@ -92,20 +92,20 @@ unpackBool notBool = throwError $ TypeMismatch "boolean" notBool
 
 -- Wrap the `Bool` result of `eqv` into a `LispVal`. (Confusingly, also called
 -- `Bool`. Should probably change that.)
-eqvWrap :: [LispVal] -> ThrowsError LispVal
-eqvWrap args = Bool <$> eqv args
+equalsStrictWrap :: [LispVal] -> ThrowsError LispVal
+equalsStrictWrap args = Bool <$> equalsStrict args
 
 -- Strict(er) equivalence check.
 -- See: http://www.schemers.org/Documents/Standards/R5RS/HTML/r5rs-Z-H-9.html#%_sec_6.1
-eqv :: [LispVal] -> ThrowsError Bool
-eqv [Bool arg1, Bool arg2] = return $ arg1 == arg2
-eqv [Number arg1, Number arg2] = return $ arg1 == arg2
-eqv [String arg1, String arg2] = return $ arg1 == arg2
-eqv [Atom arg1, Atom arg2] = return $ arg1 == arg2
-eqv [DottedList xs x, DottedList ys y] = eqv [List $ xs ++ [x], List $ ys ++ [y]]
-eqv [List arg1, List arg2] = return $ listsEqualStrict arg1 arg2
-eqv [_, _] = return False
-eqv badArgList = throwError $ NumArgs 2 badArgList
+equalsStrict :: [LispVal] -> ThrowsError Bool
+equalsStrict [Bool arg1, Bool arg2] = return $ arg1 == arg2
+equalsStrict [Number arg1, Number arg2] = return $ arg1 == arg2
+equalsStrict [String arg1, String arg2] = return $ arg1 == arg2
+equalsStrict [Atom arg1, Atom arg2] = return $ arg1 == arg2
+equalsStrict [DottedList xs x, DottedList ys y] = equalsStrict [List $ xs ++ [x], List $ ys ++ [y]]
+equalsStrict [List arg1, List arg2] = return $ listsEqualStrict arg1 arg2
+equalsStrict [_, _] = return False
+equalsStrict badArgList = throwError $ NumArgs 2 badArgList
 
 -- Check for equality of two lists of `LipsVal`s: they're the same length, and
 -- each corresponding item is also (strictly) equivalent.
@@ -114,12 +114,14 @@ listsEqualStrict list1 list2 =
   (length list1 == length list2)
     && all eqvPair (zip list1 list2)
   where
-    eqvPair (x1, x2) = case eqv [x1, x2] of
+    eqvPair (x1, x2) = case equalsStrict [x1, x2] of
       Left _ -> False
       Right val -> val
 
+-- We use this for our heterogeneous list of unpackers below:
 data Unpacker = forall a. Eq a => AnyUnpacker (LispVal -> ThrowsError a)
 
+-- Helper to check equivalence of two args with a given unpacker function.
 unpackEquals :: LispVal -> LispVal -> Unpacker -> ThrowsError Bool
 unpackEquals arg1 arg2 (AnyUnpacker unpacker) =
   do
@@ -137,9 +139,9 @@ weakTypeEquals arg1 arg2 = or <$> mapM (unpackEquals arg1 arg2) allUnpackers
     allUnpackers = [AnyUnpacker unpackNum, AnyUnpacker unpackStr, AnyUnpacker unpackBool]
 
 -- Loose(r) equivalence check. Tries both loose and un-loose checks.
-equal :: [LispVal] -> ThrowsError LispVal
-equal [arg1, arg2] = do
+equalsLoose :: [LispVal] -> ThrowsError LispVal
+equalsLoose [arg1, arg2] = do
   loose <- weakTypeEquals arg1 arg2
-  strict <- eqv [arg1, arg2]
+  strict <- equalsStrict [arg1, arg2]
   return $ Bool (loose || strict)
-equal badArgList = throwError $ NumArgs 2 badArgList
+equalsLoose badArgList = throwError $ NumArgs 2 badArgList
