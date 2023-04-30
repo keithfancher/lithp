@@ -1,7 +1,12 @@
-module Eval (eval) where
+module Eval
+  ( applyProc,
+    eval,
+  )
+where
 
 import Control.Monad.Except (liftIO, throwError)
 import Data.Maybe (isNothing)
+import IO (load)
 import State (bindVars, defineVar, getVar, liftThrows, setVar)
 import Val (Env, IOThrowsError, LispError (..), LispFunc (..), LispVal (..), makeNormalFunc, makeVarArgs)
 
@@ -30,6 +35,8 @@ eval env (List (Atom "lambda" : DottedList params varargs : body)) =
   makeVarArgs varargs env params body
 eval env (List (Atom "lambda" : varargs@(Atom _) : body)) =
   makeVarArgs varargs env [] body
+eval env (List [Atom "load", String filename]) =
+  load filename >>= fmap last . mapM (eval env)
 eval env (List (function : args)) = do
   func <- eval env function
   argVals <- mapM (eval env) args
@@ -49,4 +56,10 @@ apply (Func (LispFunc params varargs body closure)) args =
     bindVarArgs arg env = case arg of
       Just argName -> liftIO $ bindVars env [(argName, List remainingArgs)]
       Nothing -> return env
+apply (IOFunc func) args = func args
 apply badFuncName _ = throwError $ NotFunction "Can't apply non-function" $ show badFuncName
+
+-- TODO: partial :(
+applyProc :: [LispVal] -> IOThrowsError LispVal
+applyProc [func, List args] = apply func args
+applyProc (func : args) = apply func args

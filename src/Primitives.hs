@@ -1,14 +1,18 @@
 module Primitives (primitiveBindings) where
 
 import Control.Monad.Except (catchError, throwError)
+import Eval (applyProc)
+import IO (closePort, makePort, readAll, readContents, readProc, writeProc)
 import List (car, cdr, cons)
 import State (bindVars)
-import Val (Env, LispError (..), LispVal (..), ThrowsError, nullEnv)
+import System.IO (IOMode (..))
+import Val (Env, IOThrowsError, LispError (..), LispVal (..), ThrowsError, nullEnv)
 
 primitiveBindings :: IO Env
-primitiveBindings = nullEnv >>= flip bindVars (map makePrimitiveFunc primitives)
+primitiveBindings = nullEnv >>= flip bindVars combinedPrimitives
   where
-    makePrimitiveFunc (var, func) = (var, PrimitiveFunc func)
+    combinedPrimitives = map (makeFunc IOFunc) ioPrimitives ++ map (makeFunc PrimitiveFunc) primitives
+    makeFunc constructor (var, func) = (var, constructor func)
 
 primitives :: [(String, [LispVal] -> ThrowsError LispVal)]
 primitives =
@@ -38,6 +42,19 @@ primitives =
     ("eq?", equalsStrictWrap),
     ("eqv?", equalsStrictWrap),
     ("equal?", equalsLoose)
+  ]
+
+ioPrimitives :: [(String, [LispVal] -> IOThrowsError LispVal)]
+ioPrimitives =
+  [ ("apply", applyProc),
+    ("open-input-file", makePort ReadMode),
+    ("open-output-file", makePort WriteMode),
+    ("close-input-port", closePort),
+    ("close-output-port", closePort),
+    ("read", readProc),
+    ("write", writeProc),
+    ("read-contents", readContents),
+    ("read-all", readAll)
   ]
 
 numericBinop :: (Integer -> Integer -> Integer) -> [LispVal] -> ThrowsError LispVal
