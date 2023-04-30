@@ -18,6 +18,7 @@ where
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.Except (ExceptT, catchError)
 import Data.IORef (IORef, newIORef)
+import System.IO (Handle)
 import Text.Parsec (ParseError)
 
 data LispVal
@@ -29,6 +30,8 @@ data LispVal
   | Bool Bool
   | PrimitiveFunc ([LispVal] -> ThrowsError LispVal)
   | Func LispFunc
+  | IOFunc ([LispVal] -> IOThrowsError LispVal)
+  | Port Handle
 
 -- A user-defined function.
 data LispFunc = LispFunc
@@ -62,6 +65,8 @@ showVal (Func LispFunc {params = args, vararg = varargs, body = _, closure = _})
            Just arg -> " . " ++ arg
        )
     ++ ") ...)"
+showVal (Port _) = "<IO port>"
+showVal (IOFunc _) = "<IO primitive>"
 
 unwordsList :: [LispVal] -> String
 unwordsList = unwords . map showVal
