@@ -1,5 +1,6 @@
 module Parse
   ( readExpr,
+    readExprList,
   )
 where
 
@@ -8,7 +9,13 @@ import Text.ParserCombinators.Parsec hiding (spaces)
 import Val (LispError (..), LispVal (..), ThrowsError)
 
 readExpr :: String -> ThrowsError LispVal
-readExpr input = case parse parseExpr "lisp" input of
+readExpr = readOrThrow parseExpr
+
+readExprList :: String -> ThrowsError [LispVal]
+readExprList = readOrThrow (endBy parseExpr spaces)
+
+readOrThrow :: Parser a -> String -> ThrowsError a
+readOrThrow parser input = case parse parser "lisp" input of
   Left err -> throwError $ Parser err
   Right val -> return val
 
